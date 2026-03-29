@@ -4,7 +4,7 @@ export const CATEGORIES = {
     slug: "gundem",
     description: "Türkiye'nin güncel haberleri ve öne çıkan gelişmeler.",
     rssFeeds: [
-      "https://www.yenisafak.com/rss?xml=gundem",
+      "https://www.yenisafak.com/rss-feeds?category=gundem",
     ],
   },
   siyaset: {
