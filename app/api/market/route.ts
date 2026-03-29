@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 
 const TRUNCGIL_URL = "https://finans.truncgil.com/v4/today.json";
 
-export const revalidate = 300; // 5 dakika cache
-
 export async function GET() {
   try {
     const res = await fetch(TRUNCGIL_URL, {
