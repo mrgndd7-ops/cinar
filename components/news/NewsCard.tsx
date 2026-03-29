@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
+import { motion } from "framer-motion";
 import type { NewsItem } from "@/types/news";
 import CategoryBadge from "@/components/ui/CategoryBadge";
-import { formatPubDate } from "@/lib/rss";
+import { formatPubDate } from "@/lib/utils";
 
 interface NewsCardProps {
   item: NewsItem;
@@ -10,12 +13,14 @@ interface NewsCardProps {
 
 export default function NewsCard({ item, priority = false }: NewsCardProps) {
   return (
-    <a
+    <motion.a
       href={item.link}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block bg-white rounded-xl overflow-hidden hover:shadow-[0_4px_20px_-2px_rgba(21,69,57,0.10)] transition-shadow duration-300"
-      style={{ boxShadow: "0 2px 12px -2px rgba(21,69,57,0.05)" }}
+      whileHover={{ y: -3 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="group block bg-white rounded-xl overflow-hidden"
+      style={{ boxShadow: "0 2px 12px -2px rgba(21,69,57,0.06)" }}
     >
       <div className="relative aspect-[16/9] overflow-hidden rounded-xl">
         {item.imageUrl ? (
@@ -34,15 +39,15 @@ export default function NewsCard({ item, priority = false }: NewsCardProps) {
             </span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#154539]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#154539]/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       <div className="p-[1.2rem] space-y-2.5">
         <CategoryBadge category={item.category} />
-        <h3 className="font-headline font-bold text-[#154539] text-[15px] leading-snug group-hover:text-[#77592c] transition-colors line-clamp-3">
+        <h3 className="font-headline font-bold text-[#154539] text-[15px] leading-snug group-hover:text-[#77592c] transition-colors duration-200 line-clamp-3">
           {item.title}
         </h3>
         {item.description && (
-          <p className="text-xs text-[#404945] leading-relaxed line-clamp-2 opacity-80">
+          <p className="text-xs text-[#404945] leading-relaxed line-clamp-2 opacity-75">
             {item.description}
           </p>
         )}
@@ -56,6 +61,6 @@ export default function NewsCard({ item, priority = false }: NewsCardProps) {
           </span>
         </div>
       </div>
-    </a>
+    </motion.a>
   );
 }

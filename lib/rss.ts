@@ -105,17 +105,4 @@ export async function getAllLatestNews(limit = 30): Promise<NewsItem[]> {
   ).slice(0, limit);
 }
 
-export function formatPubDate(pubDate: string): string {
-  try {
-    const date = new Date(pubDate);
-    return date.toLocaleDateString("tr-TR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return "";
-  }
-}
+// formatPubDate lib/utils.ts'e taşındı (client component'ler kullanabilsin)

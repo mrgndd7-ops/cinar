@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { CATEGORIES, type CategoryKey } from "@/lib/categories";
-import { getNewsByCategory, formatPubDate } from "@/lib/rss";
+import { getNewsByCategory } from "@/lib/rss";
+import { formatPubDate } from "@/lib/utils";
 import NewsCard from "@/components/news/NewsCard";
 import CategoryBadge from "@/components/ui/CategoryBadge";
 

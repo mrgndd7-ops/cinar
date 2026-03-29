@@ -1,5 +1,5 @@
 import type { NewsItem } from "@/types/news";
-import { formatPubDate } from "@/lib/rss";
+import { formatPubDate } from "@/lib/utils";
 
 interface QuickAgendaStripProps {
   items: NewsItem[];

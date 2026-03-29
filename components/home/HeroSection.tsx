@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { NewsItem } from "@/types/news";
 import CategoryBadge from "@/components/ui/CategoryBadge";
-import { formatPubDate } from "@/lib/rss";
+import { formatPubDate } from "@/lib/utils";
 
 interface HeroSectionProps {
   items: NewsItem[];

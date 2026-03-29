@@ -26,7 +26,8 @@ export default function RootLayout({
     <html lang="tr" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-[#fbf9f5] text-[#1b1c1a]">
         <Header />
-        <main className="flex-1 mt-[88px]">{children}</main>
+        {/* mt = utility bar (32px) + nav bar (60px) = 92px */}
+        <main className="flex-1 mt-[92px]">{children}</main>
         <Footer />
       </body>
     </html>

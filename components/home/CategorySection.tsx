@@ -4,7 +4,7 @@ import NewsCard from "@/components/news/NewsCard";
 import NewsCardHorizontal from "@/components/news/NewsCardHorizontal";
 import Image from "next/image";
 import CategoryBadge from "@/components/ui/CategoryBadge";
-import { formatPubDate } from "@/lib/rss";
+import { formatPubDate } from "@/lib/utils";
 
 type LayoutType = "grid4" | "featured+list" | "grid3" | "grid2" | "horizontal";
 
@@ -13,7 +13,7 @@ interface CategorySectionProps {
   slug: string;
   items: NewsItem[];
   layout?: LayoutType;
-  bgColor?: string;
+  tinted?: boolean;
 }
 
 export default function CategorySection({
@@ -21,33 +21,31 @@ export default function CategorySection({
   slug,
   items,
   layout = "grid4",
-  bgColor,
+  tinted = false,
 }: CategorySectionProps) {
   if (!items.length) return null;
 
   return (
-    <section
-      className="rounded-2xl px-0 py-0"
-      style={bgColor ? { backgroundColor: bgColor, padding: "2rem" } : {}}
-    >
-      {/* Section Header */}
-      <div className="flex items-end justify-between mb-7 pb-2.5"
-        style={{ borderBottom: "2px solid rgba(47,93,80,0.08)" }}
-      >
-        <h2 className="text-xl font-extrabold text-[#154539] flex items-center gap-3">
-          <span className="w-1.5 h-6 bg-[#77592c] rounded-full" />
-          {label}
-        </h2>
+    <section className={tinted ? "bg-[#f5f3ef] rounded-2xl p-8" : ""}>
+      {/* Section Header — background-color shift ile ayırım, border yok */}
+      <div className="flex items-end justify-between mb-7">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-[#77592c] rounded-full" />
+            <h2 className="text-xl font-extrabold text-[#154539]">{label}</h2>
+          </div>
+          {/* Ayraç: border değil, bg shift — kısa dekoratif çizgi */}
+          <div className="ml-4 h-0.5 w-12 bg-[#77592c]/30 rounded-full" />
+        </div>
         <Link
           href={`/${slug}`}
-          className="text-xs font-bold text-[#77592c] hover:underline flex items-center gap-1"
+          className="text-xs font-bold text-[#77592c] hover:opacity-70 transition-opacity flex items-center gap-1"
         >
           Tümünü Gör
           <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
         </Link>
       </div>
 
-      {/* Layout: 4-col grid */}
       {layout === "grid4" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {items.slice(0, 4).map((item, i) => (
@@ -56,10 +54,8 @@ export default function CategorySection({
         </div>
       )}
 
-      {/* Layout: Featured left + list right */}
       {layout === "featured+list" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Featured */}
           {items[0] && (
             <a
               href={items[0].link}
@@ -67,7 +63,7 @@ export default function CategorySection({
               rel="noopener noreferrer"
               className="group space-y-4 block"
             >
-              <div className="overflow-hidden rounded-xl shadow-sm aspect-[4/3]">
+              <div className="overflow-hidden rounded-xl aspect-[4/3]">
                 {items[0].imageUrl ? (
                   <Image
                     src={items[0].imageUrl}
@@ -94,7 +90,6 @@ export default function CategorySection({
               </span>
             </a>
           )}
-          {/* List */}
           <div className="flex flex-col gap-6">
             {items.slice(1, 4).map((item) => (
               <NewsCardHorizontal key={item.guid} item={item} />
@@ -103,7 +98,6 @@ export default function CategorySection({
         </div>
       )}
 
-      {/* Layout: 3-col grid */}
       {layout === "grid3" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.slice(0, 3).map((item, i) => (
@@ -112,7 +106,6 @@ export default function CategorySection({
         </div>
       )}
 
-      {/* Layout: 2-col grid */}
       {layout === "grid2" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {items.slice(0, 2).map((item, i) => (
@@ -121,7 +114,6 @@ export default function CategorySection({
         </div>
       )}
 
-      {/* Layout: Horizontal list */}
       {layout === "horizontal" && (
         <div className="flex flex-col gap-6">
           {items.slice(0, 5).map((item) => (

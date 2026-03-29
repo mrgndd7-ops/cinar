@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import TopUtilityBar from "./TopUtilityBar";
 
 const NAV_LINKS = [
@@ -58,8 +59,7 @@ export default function Header() {
           <nav className="hidden lg:flex items-center gap-6 xl:gap-8 font-headline font-bold text-[13px] tracking-tight text-[#154539]">
             {NAV_LINKS.map((link) => {
               const isActive =
-                pathname === link.href ||
-                pathname.startsWith(link.href + "/");
+                pathname === link.href || pathname.startsWith(link.href + "/");
               return (
                 <Link
                   key={link.href}
@@ -95,42 +95,63 @@ export default function Header() {
               aria-label="Menüyü aç"
             >
               <span
-                className={`block h-0.5 w-5 bg-[#154539] transition-all ${mobileOpen ? "rotate-45 translate-y-2" : ""}`}
+                className={`block h-0.5 w-5 bg-[#154539] transition-all duration-200 ${
+                  mobileOpen ? "rotate-45 translate-y-2" : ""
+                }`}
               />
               <span
-                className={`block h-0.5 w-5 bg-[#154539] transition-all ${mobileOpen ? "opacity-0" : ""}`}
+                className={`block h-0.5 w-5 bg-[#154539] transition-all duration-200 ${
+                  mobileOpen ? "opacity-0" : ""
+                }`}
               />
               <span
-                className={`block h-0.5 w-5 bg-[#154539] transition-all ${mobileOpen ? "-rotate-45 -translate-y-2" : ""}`}
+                className={`block h-0.5 w-5 bg-[#154539] transition-all duration-200 ${
+                  mobileOpen ? "-rotate-45 -translate-y-2" : ""
+                }`}
               />
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {mobileOpen && (
-          <div className="lg:hidden border-t border-[#c0c8c4]/20 bg-[#fbf9f5]/95 backdrop-blur-md">
-            <nav className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-1">
-              {NAV_LINKS.map((link) => {
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={`py-3 px-3 rounded-xl text-sm font-bold transition-colors ${
-                      isActive
-                        ? "text-[#77592c] bg-[#f5f3ef]"
-                        : "text-[#154539] hover:bg-[#f5f3ef]"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-        )}
+        {/* Mobile Menu — Framer Motion AnimatePresence */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              key="mobile-menu"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeInOut" }}
+              className="lg:hidden overflow-hidden border-t border-[#c0c8c4]/15 bg-[#fbf9f5]/97 backdrop-blur-md"
+            >
+              <nav className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-0.5">
+                {NAV_LINKS.map((link, i) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <motion.div
+                      key={link.href}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03, duration: 0.18 }}
+                    >
+                      <Link
+                        href={link.href}
+                        onClick={() => setMobileOpen(false)}
+                        className={`block py-3 px-3 rounded-xl text-sm font-bold transition-colors ${
+                          isActive
+                            ? "text-[#77592c] bg-[#f5f3ef]"
+                            : "text-[#154539] hover:bg-[#f5f3ef]"
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );

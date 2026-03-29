@@ -65,7 +65,7 @@ export const CATEGORIES = {
       "https://www.diyanethaber.com.tr/rss/kultur-sanat-haberleri",
     ],
   },
-} as const;
+};
 
 export type CategoryKey = keyof typeof CATEGORIES;
 export type CategoryValue = (typeof CATEGORIES)[CategoryKey];

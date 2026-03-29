@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { NewsItem } from "@/types/news";
 
 interface BreakingNewsBannerProps {
@@ -18,7 +18,7 @@ export default function BreakingNewsBanner({ items }: BreakingNewsBannerProps) {
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % items.length);
         setVisible(true);
-      }, 400);
+      }, 300);
     }, 5000);
     return () => clearInterval(interval);
   }, [items.length]);
@@ -38,14 +38,9 @@ export default function BreakingNewsBanner({ items }: BreakingNewsBannerProps) {
         rel="noopener noreferrer"
         className="flex-1 flex items-center gap-2 min-w-0"
       >
+        <span className="inline-block w-2 h-2 rounded-full bg-[#77592c] flex-shrink-0 animate-pulse" />
         <span
-          className="inline-block w-2 h-2 rounded-full bg-[#77592c] flex-shrink-0"
-          style={{
-            animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-          }}
-        />
-        <span
-          className={`text-sm font-medium text-[#154539]/90 truncate transition-opacity duration-400 ${
+          className={`text-sm font-medium text-[#154539]/90 truncate transition-opacity duration-300 ${
             visible ? "opacity-100" : "opacity-0"
           }`}
         >
