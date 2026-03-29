@@ -5,6 +5,7 @@ import NewsCardHorizontal from "@/components/news/NewsCardHorizontal";
 import Image from "next/image";
 import CategoryBadge from "@/components/ui/CategoryBadge";
 import { formatPubDate } from "@/lib/utils";
+import { getFallback } from "@/lib/staticFallbacks";
 
 type LayoutType = "grid4" | "featured+list" | "grid3" | "grid2" | "horizontal";
 
@@ -23,7 +24,8 @@ export default function CategorySection({
   layout = "grid4",
   tinted = false,
 }: CategorySectionProps) {
-  if (!items.length) return null;
+  // yurt-echo yaklaşımı: boş feed yerine statik fallback göster
+  const display = items.length > 0 ? items : getFallback(slug);
 
   return (
     <section className={tinted ? "bg-[#f5f3ef] rounded-2xl p-8" : ""}>
@@ -48,7 +50,7 @@ export default function CategorySection({
 
       {layout === "grid4" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {items.slice(0, 4).map((item, i) => (
+          {display.slice(0, 4).map((item, i) => (
             <NewsCard key={item.guid} item={item} priority={i === 0} />
           ))}
         </div>
@@ -56,18 +58,18 @@ export default function CategorySection({
 
       {layout === "featured+list" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {items[0] && (
+          {display[0] && (
             <a
-              href={items[0].link}
-              target="_blank"
+              href={display[0].link === "#" ? undefined : display[0].link}
+              target={display[0].link === "#" ? undefined : "_blank"}
               rel="noopener noreferrer"
               className="group space-y-4 block"
             >
               <div className="overflow-hidden rounded-xl aspect-[4/3]">
-                {items[0].imageUrl ? (
+                {display[0].imageUrl ? (
                   <Image
-                    src={items[0].imageUrl}
-                    alt={items[0].title}
+                    src={display[0].imageUrl}
+                    alt={display[0].title}
                     width={600}
                     height={450}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -76,22 +78,22 @@ export default function CategorySection({
                   <div className="w-full h-full bg-[#efeeea]" />
                 )}
               </div>
-              <CategoryBadge category={items[0].category} />
+              <CategoryBadge category={display[0].category} />
               <h3 className="text-xl font-bold text-[#154539] group-hover:text-[#77592c] transition-colors leading-snug">
-                {items[0].title}
+                {display[0].title}
               </h3>
-              {items[0].description && (
+              {display[0].description && (
                 <p className="text-sm text-[#404945]/70 leading-relaxed line-clamp-2">
-                  {items[0].description}
+                  {display[0].description}
                 </p>
               )}
               <span className="text-[10px] text-[#717975]">
-                {formatPubDate(items[0].pubDate)}
+                {formatPubDate(display[0].pubDate)}
               </span>
             </a>
           )}
           <div className="flex flex-col gap-6">
-            {items.slice(1, 4).map((item) => (
+            {display.slice(1, 4).map((item) => (
               <NewsCardHorizontal key={item.guid} item={item} />
             ))}
           </div>
@@ -100,7 +102,7 @@ export default function CategorySection({
 
       {layout === "grid3" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.slice(0, 3).map((item, i) => (
+          {display.slice(0, 3).map((item, i) => (
             <NewsCard key={item.guid} item={item} priority={i === 0} />
           ))}
         </div>
@@ -108,7 +110,7 @@ export default function CategorySection({
 
       {layout === "grid2" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {items.slice(0, 2).map((item, i) => (
+          {display.slice(0, 2).map((item, i) => (
             <NewsCard key={item.guid} item={item} priority={i === 0} />
           ))}
         </div>
@@ -116,7 +118,7 @@ export default function CategorySection({
 
       {layout === "horizontal" && (
         <div className="flex flex-col gap-6">
-          {items.slice(0, 5).map((item) => (
+          {display.slice(0, 5).map((item) => (
             <NewsCardHorizontal key={item.guid} item={item} />
           ))}
         </div>

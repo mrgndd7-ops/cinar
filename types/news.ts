@@ -7,4 +7,5 @@ export interface NewsItem {
   category: string;
   source: string;
   guid: string;
+  author?: string;
 }

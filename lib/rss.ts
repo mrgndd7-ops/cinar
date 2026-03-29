@@ -2,62 +2,122 @@ import Parser from "rss-parser";
 import { cacheLife } from "next/cache";
 import type { NewsItem } from "@/types/news";
 
-type CustomItem = {
-  "media:content": { $: { url: string } };
-  enclosure: { url: string };
+// rss-parser'a ek XML alanları için tip genişletmesi
+type RawItem = {
+  "media:content"?: { $?: { url?: string }; url?: string };
+  "media:thumbnail"?: { $?: { url?: string }; url?: string };
+  enclosure?: { url?: string };
+  image?: string;
 };
 
-const parser = new Parser<Record<string, unknown>, CustomItem>({
+const parser = new Parser<Record<string, unknown>, RawItem>({
   customFields: {
     item: [
-      ["media:content", "media:content"],
-      ["enclosure", "enclosure"],
+      ["media:content",   "media:content"],
+      ["media:thumbnail", "media:thumbnail"],
+      ["enclosure",       "enclosure"],
+      ["image",           "image"],
     ],
   },
 });
 
-function extractImageFromContent(content: string): string | null {
-  const match = content.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return match ? match[1] : null;
+// ─── Yurt-echo'dan alınan: 7 stratejili görsel çözümleme ─────────────────────
+
+function isValidImage(url: unknown): url is string {
+  if (!url || typeof url !== "string" || url.length < 10) return false;
+  try {
+    const { pathname } = new URL(url);
+    if (pathname.length < 5) return false;
+    if (/\.(jpe?g|png|gif|webp|avif)/i.test(pathname)) return true;
+    if (/(upload|image|photo|media|cdn|thumb|crop)/i.test(pathname)) return true;
+    return false;
+  } catch {
+    return false;
+  }
 }
 
-async function fetchSingleFeed(
-  url: string,
-  categorySlug: string
-): Promise<NewsItem[]> {
-  try {
-    const feed = await parser.parseURL(url);
-    let hostname = categorySlug;
-    try {
-      hostname = new URL(url).hostname;
-    } catch {}
+function extractImage(html: string): string {
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match?.[1] ?? "";
+}
 
-    return feed.items.map((item) => ({
-      title: item.title ?? "",
-      link: item.link ?? "",
-      pubDate: item.pubDate ?? new Date().toISOString(),
-      description: item.contentSnippet ?? item.content ?? "",
-      imageUrl:
-        (item as unknown as CustomItem)?.["media:content"]?.$?.url ??
-        (item as unknown as CustomItem)?.enclosure?.url ??
-        extractImageFromContent(item.content ?? "") ??
-        null,
-      category: categorySlug,
-      source: hostname,
-      guid: item.guid ?? item.link ?? "",
-    }));
-  } catch (error) {
-    console.error(`RSS fetch failed for ${url}:`, error);
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, "").replace(/&[a-z]+;/gi, " ").trim();
+}
+
+function resolveImage(raw: RawItem, content: string, description: string): string | null {
+  const mc = raw["media:content"];
+  const mt = raw["media:thumbnail"];
+
+  const candidates = [
+    raw.enclosure?.url,
+    mc?.$?.url ?? mc?.url,
+    mt?.$?.url ?? mt?.url,
+    typeof raw.image === "string" ? raw.image : undefined,
+    extractImage(content),
+    extractImage(description),
+  ];
+
+  return candidates.find(isValidImage) ?? null;
+}
+
+// ─── Manuel fetch — User-Agent header ile (bazı RSS sunucuları bot engeli) ───
+
+async function fetchXml(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; CinarHaber/1.0)",
+      "Accept":     "application/rss+xml, application/xml, text/xml, */*",
+    },
+    next: { revalidate: 0 }, // cache burada değil, 'use cache' ile yönetiyoruz
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
+  return res.text();
+}
+
+// ─── Tek feed çekme ───────────────────────────────────────────────────────────
+
+async function fetchSingleFeed(url: string, categorySlug: string): Promise<NewsItem[]> {
+  try {
+    const xml  = await fetchXml(url);
+    const feed = await parser.parseString(xml);
+
+    const hostname = (() => {
+      try { return new URL(url).hostname; } catch { return categorySlug; }
+    })();
+
+    return feed.items.map((item) => {
+      const raw         = item as unknown as RawItem;
+      const content     = (item as Record<string, string>)["content:encoded"] ?? item.content ?? "";
+      const description = item.contentSnippet ?? item.content ?? "";
+
+      return {
+        title:       item.title       ?? "",
+        link:        item.link        ?? "",
+        pubDate:     item.pubDate     ?? new Date().toISOString(),
+        description: stripHtml(description).slice(0, 220),
+        imageUrl:    resolveImage(raw, content, description),
+        category:    categorySlug,
+        source:      hostname,
+        guid:        item.guid ?? item.link ?? "",
+        author:      item.creator ?? (item as Record<string, string>)["dc:creator"] ?? undefined,
+      };
+    });
+  } catch (err) {
+    console.error(`[RSS] fetch failed: ${url} —`, err);
     return [];
   }
 }
 
+// ─── Dedup yardımcısı ─────────────────────────────────────────────────────────
+
 function dedup(items: NewsItem[]): NewsItem[] {
   return items.filter(
-    (item, index, self) =>
-      index === self.findIndex((t) => t.guid === item.guid)
+    (item, i, self) => i === self.findIndex((t) => t.guid === item.guid)
   );
 }
+
+// ─── Public API (cached) ──────────────────────────────────────────────────────
 
 export async function getNewsByCategory(
   categorySlug: string,
@@ -70,14 +130,11 @@ export async function getNewsByCategory(
     feedUrls.map((url) => fetchSingleFeed(url, categorySlug))
   );
 
-  const allItems = results
-    .filter(
-      (r): r is PromiseFulfilledResult<NewsItem[]> => r.status === "fulfilled"
-    )
-    .flatMap((r) => r.value);
-
-  return dedup(allItems).sort(
-    (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
+  return dedup(
+    results
+      .filter((r): r is PromiseFulfilledResult<NewsItem[]> => r.status === "fulfilled")
+      .flatMap((r) => r.value)
+      .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
   );
 }
 
@@ -95,14 +152,8 @@ export async function getAllLatestNews(limit = 30): Promise<NewsItem[]> {
 
   return dedup(
     results
-      .filter(
-        (r): r is PromiseFulfilledResult<NewsItem[]> => r.status === "fulfilled"
-      )
+      .filter((r): r is PromiseFulfilledResult<NewsItem[]> => r.status === "fulfilled")
       .flatMap((r) => r.value)
-      .sort(
-        (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
-      )
+      .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
   ).slice(0, limit);
 }
-
-// formatPubDate lib/utils.ts'e taşındı (client component'ler kullanabilsin)
