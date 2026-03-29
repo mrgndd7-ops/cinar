@@ -1,77 +1,75 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-const MOCK_RATES = {
-  usd: { value: "32.42", trend: "down" as const },
-  eur: { value: "35.15", trend: "up" as const },
-  altin: { value: "2.445", trend: "up" as const },
-};
+interface MarketItem {
+  value: string;
+  change: string;
+  trend: "up" | "down" | "flat";
+}
+
+interface MarketData {
+  usd: MarketItem;
+  eur: MarketItem;
+  altin: MarketItem;
+}
+
+function Arrow({ trend }: { trend: "up" | "down" | "flat" }) {
+  if (trend === "up")   return <span className="text-emerald-400">▲</span>;
+  if (trend === "down") return <span className="text-red-400">▼</span>;
+  return null;
+}
 
 export default function TopUtilityBar() {
-  const [dateStr, setDateStr] = useState("");
+  const [data, setData]       = useState<MarketData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setDateStr(
-      new Date().toLocaleDateString("tr-TR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    );
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const res = await fetch("/api/market");
+        if (!res.ok) throw new Error("failed");
+        const json: MarketData = await res.json();
+        if (!cancelled) { setData(json); setLoading(false); }
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    const interval = setInterval(load, 5 * 60 * 1000); // 5 dakikada bir yenile
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   return (
-    <div className="w-full bg-[#2f5d50] text-white/90 text-[11px] font-medium py-1.5 px-4 md:px-6 flex justify-between items-center">
-      <div className="flex items-center gap-4 md:gap-6">
-        <div className="flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-[13px]">cloud</span>
-          <span className="hidden sm:inline">İstanbul</span>
-          <span>14°C</span>
-        </div>
-        <div className="hidden md:flex items-center gap-4 opacity-80 border-l border-white/10 pl-4">
-          <span>
-            USD {MOCK_RATES.usd.value}{" "}
-            <span className="text-red-400">▼</span>
+    <div className="w-full bg-[#2f5d50] text-white/90 text-[11px] font-medium py-1.5 px-4 md:px-6 flex items-center gap-5 md:gap-7">
+      {loading ? (
+        <span className="text-white/40">Piyasalar yükleniyor…</span>
+      ) : data ? (
+        <>
+          <span className="flex items-center gap-1 gap-x-1.5">
+            <span className="text-white/50 font-semibold">USD</span>
+            <span>{data.usd.value}</span>
+            <Arrow trend={data.usd.trend} />
           </span>
-          <span>
-            EUR {MOCK_RATES.eur.value}{" "}
-            <span className="text-emerald-400">▲</span>
+          <span className="text-white/20">|</span>
+          <span className="flex items-center gap-x-1.5">
+            <span className="text-white/50 font-semibold">EUR</span>
+            <span>{data.eur.value}</span>
+            <Arrow trend={data.eur.trend} />
           </span>
-          <span>
-            ALTIN {MOCK_RATES.altin.value}{" "}
-            <span className="text-emerald-400">▲</span>
+          <span className="text-white/20">|</span>
+          <span className="flex items-center gap-x-1.5">
+            <span className="text-white/50 font-semibold">ALTIN</span>
+            <span>{data.altin.value}</span>
+            <Arrow trend={data.altin.trend} />
           </span>
-        </div>
-        {dateStr && (
-          <span className="hidden lg:inline text-white/50 border-l border-white/10 pl-4">
-            {dateStr}
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-4 md:gap-6">
-        <a
-          href="#"
-          className="flex items-center gap-1.5 hover:text-white transition-colors"
-        >
-          <span
-            className="material-symbols-outlined text-[13px] text-red-400"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            circle
-          </span>
-          <span>Canlı Yayın</span>
-        </a>
-        <div className="flex items-center gap-2 border-l border-white/10 pl-4">
-          <span className="material-symbols-outlined text-[15px] cursor-pointer hover:text-white">
-            share
-          </span>
-          <span className="material-symbols-outlined text-[15px] cursor-pointer hover:text-white">
-            rss_feed
-          </span>
-        </div>
-      </div>
+        </>
+      ) : (
+        <span className="text-white/30">Piyasa verisi alınamadı</span>
+      )}
     </div>
   );
 }
