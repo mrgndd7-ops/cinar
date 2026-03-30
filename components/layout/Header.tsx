@@ -78,15 +78,11 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#154539] cursor-pointer hover:opacity-70 transition-opacity text-[22px] hidden sm:inline">
-              search
-            </span>
-            <div className="hidden sm:block h-4 w-px bg-[#c0c8c4]/50 mx-1" />
-            <button className="hidden sm:block text-xs font-bold text-[#154539] hover:opacity-70 transition-opacity">
-              Üyelik
-            </button>
-            <button className="bg-[#154539] text-white px-4 py-2 rounded-xl text-xs font-bold shadow hover:opacity-90 active:scale-95 transition-all">
-              Abone Ol
+            <button className="hidden sm:inline-flex items-center justify-center w-8 h-8 text-[#154539] hover:opacity-70 transition-opacity" aria-label="Ara">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
             </button>
             {/* Mobile hamburger */}
             <button
