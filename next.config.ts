@@ -4,11 +4,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   images: {
     remotePatterns: [
-      { hostname: "**.yenisafak.com" },
-      { hostname: "**.diyanethaber.com.tr" },
-      { hostname: "**.googleusercontent.com" },
-      { hostname: "**.googleapis.com" },
-      { hostname: "**.gstatic.com" },
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
     ],
   },
   serverExternalPackages: ["rss-parser"],
