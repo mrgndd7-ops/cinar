@@ -40,7 +40,7 @@ export default function Footer() {
               <span className="text-xl font-extrabold tracking-tighter">Çınar</span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed max-w-xs">
-              Köklü habercilik, güvenilir kaynak. Değer odaklı gazetecilik anlayışıyla Türkiye&apos;nin nabzını tutuyoruz.
+              Gündeme İslamik Bakış. Değer odaklı gazetecilik anlayışıyla Türkiye&apos;nin nabzını tutuyoruz.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <span className="text-[10px] text-white/40 font-medium">RSS Kaynakları:</span>
