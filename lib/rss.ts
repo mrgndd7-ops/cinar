@@ -61,6 +61,17 @@ function resolveImage(raw: RawItem, content: string, description: string): strin
   return candidates.find(isValidImage) ?? null;
 }
 
+// ─── XML normalleştirme — Yeni Şafak'ın <image><url> yapısını enclosure'a dönüştür ───
+
+function preprocessXml(xml: string): string {
+  // <image><url>X</url></image>  →  <enclosure url="X" type="image/webp" length="0"/>
+  // Sadece tek <url> çocuğu olan <image> taglerini dönüştür (channel-level image hariç)
+  return xml.replace(
+    /<image>\s*<url>([^<]+)<\/url>\s*<\/image>/gi,
+    '<enclosure url="$1" type="image/webp" length="0"/>'
+  );
+}
+
 // ─── Manuel fetch — User-Agent header ile (bazı RSS sunucuları bot engeli) ───
 
 async function fetchXml(url: string): Promise<string> {
@@ -72,7 +83,7 @@ async function fetchXml(url: string): Promise<string> {
     next: { revalidate: 0 }, // cache burada değil, 'use cache' ile yönetiyoruz
   });
   if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
-  return res.text();
+  return preprocessXml(await res.text());
 }
 
 // ─── Tek feed çekme ───────────────────────────────────────────────────────────
