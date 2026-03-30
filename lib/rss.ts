@@ -7,7 +7,7 @@ type RawItem = {
   "media:content"?: { $?: { url?: string }; url?: string };
   "media:thumbnail"?: { $?: { url?: string }; url?: string };
   enclosure?: { url?: string };
-  image?: string;
+  image?: string | { url?: string };
 };
 
 const parser = new Parser<Record<string, unknown>, RawItem>({
@@ -53,7 +53,7 @@ function resolveImage(raw: RawItem, content: string, description: string): strin
     raw.enclosure?.url,
     mc?.$?.url ?? mc?.url,
     mt?.$?.url ?? mt?.url,
-    typeof raw.image === "string" ? raw.image : undefined,
+    typeof raw.image === "string" ? raw.image : (raw.image as { url?: string } | undefined)?.url,
     extractImage(content),
     extractImage(description),
   ];
